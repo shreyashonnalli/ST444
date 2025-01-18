@@ -1,6 +1,7 @@
 import numpy as np
 from multiprocessing import Pool
 import time
+import pandas as pd
 
 def polynomial_basis_function_transformation(X, h):
     powers = np.arange(h)
@@ -68,3 +69,18 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
     pool.close()
     pool.join()
     return mse_history, time_taken
+
+
+def estimation(n, X, y, learning_rate, epochs, num_threads, k):
+    df_mse_rows = []
+    df_time_rows = []
+    for _ in range(n):
+        alpha = np.random.rand(4)
+        mse, time = parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads, k)  
+        df_mse_rows.append(mse)  
+        df_time_rows.append(time)
+    df_mse = pd.DataFrame(df_mse_rows)
+    df_time = pd.DataFrame(df_time_rows)
+    df_mse_avg = df_mse.mean(axis=0)
+    df_time_avg = df_time.mean(axis=0)
+    return df_mse_avg, df_time_avg
