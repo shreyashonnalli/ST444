@@ -2,6 +2,7 @@ import numpy as np
 from multiprocessing import Pool
 import time
 import pandas as pd
+import random
 
 def polynomial_basis_function_transformation(X, h):
     powers = np.arange(h)
@@ -35,7 +36,8 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
         
         
         # Shuffle data
-        indices = np.random.choice(len(y), size=int(len(y) * 0.8), replace=False)
+        indices = np.random.choice(len(y), size=(k*num_threads), replace=True)
+        random.shuffle(indices)
         X_shuffled = X[indices]
         y_shuffled = y[indices]
         X_poly = polynomial_basis_function_transformation(X_shuffled, 4)
@@ -43,7 +45,7 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
         # Split data into mini-batches
         mini_batches = [
             (X_shuffled[i:i+k], y_shuffled[i:i+k], alpha)
-            for i in range(0, int(len(y) * 0.8), k)
+            for i in range(0, (k*num_threads), k)
         ]
 
         # Compute gradients in parallel
