@@ -37,13 +37,3 @@ def lin_reg_poly_sgd(X_poly, y, h, alpha, n):
                 os.getpid(),
             )
     return beta_hat_poly
-
-
-def multiprocessing_example(name1, name2):
-    print("starting process id:", os.getpid())
-    time.sleep(10)
-    print(name1, name2)
-    print("parent process:", os.getppid())
-    print("finished process id:", os.getpid())
-    print()
-    return 0
