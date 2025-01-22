@@ -1,6 +1,8 @@
 import numpy as np
 from multiprocessing import Pool
 import time
+import pandas as pd
+import random
 
 def polynomial_basis_function_transformation(X, h):
     powers = np.arange(h)
@@ -34,7 +36,8 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
         
         
         # Shuffle data
-        indices = np.random.permutation(n_samples)
+        indices = np.random.choice(len(y), size=(k*num_threads), replace=True)
+        random.shuffle(indices)
         X_shuffled = X[indices]
         y_shuffled = y[indices]
         X_poly = polynomial_basis_function_transformation(X_shuffled, 4)
@@ -42,7 +45,7 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
         # Split data into mini-batches
         mini_batches = [
             (X_shuffled[i:i+k], y_shuffled[i:i+k], alpha)
-            for i in range(0, n_samples, k)
+            for i in range(0, (k*num_threads), k)
         ]
 
         # Compute gradients in parallel
@@ -55,7 +58,7 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
         alpha -= learning_rate * avg_gradient
 
         # Calculate MSE
-        mse = np.mean((X_poly.dot(alpha) - y) ** 2) # MSE using the updated parameters
+        mse = np.mean((X_poly.dot(alpha) - y_shuffled) ** 2) # MSE using the updated parameters
         mse_history.append(mse)
 
         # Calculate time taken for the epoch
@@ -68,3 +71,18 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
     pool.close()
     pool.join()
     return mse_history, time_taken
+
+
+def estimation(n, X, y, learning_rate, epochs, num_threads, k):
+    df_mse_rows = []
+    df_time_rows = []
+    for _ in range(n):
+        alpha = np.random.rand(4)
+        mse, time = parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads, k)  
+        df_mse_rows.append(mse)  
+        df_time_rows.append(time)
+    df_mse = pd.DataFrame(df_mse_rows)
+    df_time = pd.DataFrame(df_time_rows)
+    df_mse_avg = df_mse.mean(axis=0)
+    df_time_avg = df_time.mean(axis=0)
+    return df_mse_avg, df_time_avg
