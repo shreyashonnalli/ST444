@@ -72,6 +72,7 @@ def parallel_sgd_with_k_samples(X, y, alpha, learning_rate, epochs, num_threads,
     pool.join()
     return mse_history, time_taken
 
+np.random.seed(42)
 
 def estimation(n, X, y, learning_rate, epochs, num_threads, k):
     df_mse_rows = []
